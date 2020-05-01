@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/auth_provider.dart';
 
+import '../services/snackbar_service.dart';
+
 class LoginPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -44,6 +46,8 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _loginPageUI() {
     return Builder(builder: (BuildContext _context) {
+      SnackBarService.instance.buildContext = _context;
+
       _auth = Provider.of<AuthProvider>(_context);
 
       return Container(
