@@ -16,6 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   double _deviceWidth;
 
   GlobalKey<FormState> _formKey;
+  AuthProvider _auth;
 
   String _email;
   String _password;
@@ -33,28 +34,35 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Theme.of(context).backgroundColor,
       body: Align(
         alignment: Alignment.center,
-        child: _loginPageUI(),
+        child: ChangeNotifierProvider<AuthProvider>.value(
+          value: AuthProvider.instance,
+          child: _loginPageUI(),
+        ),
       ),
     );
   }
 
   Widget _loginPageUI() {
-    return Container(
-      height: _deviceHeight * 0.60,
-      padding: EdgeInsets.symmetric(horizontal: _deviceWidth * 0.10),
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          _headingWidget(),
-          _inputForm(),
-          _loginButton(),
-          _registerButton(),
-        ],
-      ),
-    );
+    return Builder(builder: (BuildContext _context) {
+      _auth = Provider.of<AuthProvider>(_context);
+
+      return Container(
+        height: _deviceHeight * 0.60,
+        padding: EdgeInsets.symmetric(horizontal: _deviceWidth * 0.10),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            _headingWidget(),
+            _inputForm(),
+            _loginButton(),
+            _registerButton(),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _headingWidget() {
@@ -141,22 +149,24 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _loginButton() {
-    return Container(
-      height: _deviceHeight * 0.06,
-      width: _deviceWidth,
-      child: MaterialButton(
-        onPressed: () {
-          if (_formKey.currentState.validate()) {
-            // Login user
-          }
-        },
-        color: Colors.blue,
-        child: Text(
-          "LOGIN",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
+    return _auth.status == AuthStatus.Authenticated
+        ? Align(alignment: Alignment.center, child: CircularProgressIndicator())
+        : Container(
+            height: _deviceHeight * 0.06,
+            width: _deviceWidth,
+            child: MaterialButton(
+              onPressed: () {
+                if (_formKey.currentState.validate()) {
+                  _auth.loginUserWithEmailAndPassword(_email, _password);
+                }
+              },
+              color: Colors.blue,
+              child: Text(
+                "LOGIN",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+            ),
+          );
   }
 
   Widget _registerButton() {

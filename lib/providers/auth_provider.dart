@@ -37,6 +37,7 @@ class AuthProvider extends ChangeNotifier {
       print('Logged in successfully');
     } catch (e) {
       status = AuthStatus.Error;
+      print('Login error');
       // Display error
     }
 
