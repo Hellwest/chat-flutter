@@ -1,7 +1,11 @@
 import 'dart:io';
+import 'package:chatify/providers/auth_provider.dart';
+import 'package:chatify/services/cloud_storage_service.dart';
+import 'package:chatify/services/db_service.dart';
 import 'package:chatify/services/media_service.dart';
 import 'package:chatify/services/navigation_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegistrationPage extends StatefulWidget {
   @override
@@ -15,6 +19,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   double _deviceWidth;
 
   GlobalKey<FormState> _formKey;
+  AuthProvider _auth;
 
   String _name;
   String _email;
@@ -35,26 +40,35 @@ class _RegistrationPageState extends State<RegistrationPage> {
       backgroundColor: Theme.of(context).backgroundColor,
       body: Container(
         alignment: Alignment.center,
-        child: registrationPageUI(),
+        child: ChangeNotifierProvider<AuthProvider>.value(
+          value: AuthProvider.instance,
+          child: registrationPageUI(),
+        ),
       ),
     );
   }
 
   Widget registrationPageUI() {
-    return Container(
-      height: _deviceHeight * 0.75,
-      padding: EdgeInsets.symmetric(horizontal: _deviceWidth * 0.10),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          _headingWidget(),
-          _inputForm(),
-          _registerButton(),
-          _backToLoginPageButton(),
-        ],
-      ),
+    return Builder(
+      builder: (BuildContext _context) {
+        _auth = Provider.of<AuthProvider>(_context);
+
+        return Container(
+          height: _deviceHeight * 0.75,
+          padding: EdgeInsets.symmetric(horizontal: _deviceWidth * 0.10),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _headingWidget(),
+              _inputForm(),
+              _registerButton(),
+              _backToLoginPageButton(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -192,18 +206,34 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   Widget _registerButton() {
-    return Container(
-      height: _deviceHeight * 0.06,
-      width: _deviceWidth,
-      child: MaterialButton(
-        onPressed: () {},
-        color: Colors.blue,
-        child: Text(
-          "Register",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
+    return _auth.status != AuthStatus.Authenticating
+        ? Container(
+            height: _deviceHeight * 0.06,
+            width: _deviceWidth,
+            child: MaterialButton(
+              onPressed: () {
+                if (_formKey.currentState.validate() && _image != null) {
+                  _auth.registerUserWithEmailAndPassword(_email, _password,
+                      (String _uid) async {
+                    var _result = await CloudStorageService.instance
+                        .uploadUserImage(_uid, _image);
+                    var _imageURL = await _result.ref.getDownloadURL();
+                    await DBService.instance
+                        .createUserInDB(_uid, _name, _email, _imageURL);
+                  });
+                }
+              },
+              color: Colors.blue,
+              child: Text(
+                "Register",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+            ),
+          )
+        : Align(
+            alignment: Alignment.center,
+            child: CircularProgressIndicator(),
+          );
   }
 
   Widget _backToLoginPageButton() {
