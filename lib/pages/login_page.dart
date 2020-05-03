@@ -154,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _loginButton() {
-    return _auth.status == AuthStatus.Authenticated
+    return _auth.status == AuthStatus.Authenticating
         ? Align(alignment: Alignment.center, child: CircularProgressIndicator())
         : Container(
             height: _deviceHeight * 0.06,
