@@ -91,7 +91,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   Widget _inputForm() {
     return Container(
-      height: _deviceHeight * 0.35,
+      height: _deviceHeight * 0.40,
       child: Form(
         key: _formKey,
         onChanged: () {
